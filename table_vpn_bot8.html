@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Table VPN Premium</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --orange-main: #FF8C00; 
+            --bg-color: #121212;
+            --card-bg: #1E1E1E;
+            --text-color: #FFFFFF;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-y: auto;
+            -webkit-user-select: none;
+        }
+
+        header {
+            padding: 20px 0;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: var(--orange-main);
+            text-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 40px;
+        }
+
+        .power-btn {
+            background-color: var(--orange-main);
+            width: 110px; height: 110px;
+            border-radius: 50%;
+            border: 6px solid #2a2a2a;
+            cursor: pointer;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            box-shadow: 0 0 25px rgba(255, 140, 0, 0.4);
+            transition: transform 0.1s;
+        }
+        .power-btn:active { transform: scale(0.95); }
+
+        .balance-display {
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 15px;
+            color: #FFFFFF;
+        }
+        .price-hint {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .line {
+            width: 85%; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--orange-main), transparent);
+            margin: 20px 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 92%;
+        }
+
+        .btn {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 16px 5px;
+            color: white;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .best-deal {
+            grid-column: span 2;
+            border: 2px solid var(--orange-main);
+            position: relative;
+            background: linear-gradient(145deg, #1e1e1e, #2d1b00);
+        }
+        .best-deal::after {
+            content: "ВЫГОДА 50%";
+            position: absolute;
+            top: -10px; right: 15px;
+            background: var(--orange-main); color: black;
+            font-size: 9px; font-weight: 900; padding: 2px 7px; border-radius: 6px;
+        }
+
+        .full-btn { grid-column: span 2; }
+
+        .overlay {
+            display: none;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9); z-index: 99;
+        }
+        .modal {
+            display: none;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #1a1a1a;
+            border-top: 4px solid var(--orange-main);
+            border-radius: 25px 25px 0 0;
+            padding: 25px 20px;
+            z-index: 100;
+            text-align: center;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .promo-input {
+            width: 100%;
+            padding: 15px;
+            background: #000;
+            border: 1px solid #444;
+            border-radius: 12px;
+            color: var(--orange-main);
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .data-box {
+            background: #000; padding: 15px; border-radius: 12px;
+            border: 1px dashed var(--orange-main); color: var(--orange-main);
+            margin: 15px 0; font-family: monospace; word-break: break-all;
+        }
+
+        .action-submit {
+            background: var(--orange-main); color: white; border: none;
+            padding: 15px; border-radius: 12px; width: 100%;
+            font-weight: 800; font-size: 16px; cursor: pointer;
+        }
+
+        .rewards-text { color: white; font-size: 13px; margin-bottom: 15px; }
+        .rewards-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .reward-box {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 12px 0;
+            font-size: 12px;
+            color: #444;
+            display: flex; flex-direction: column;
+        }
+        .reward-box.active {
+            border-color: var(--orange-main);
+            color: white;
+            box-shadow: 0 0 10px rgba(255, 140, 0, 0.3);
+        }
+        .reward-box b { font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <header>TABLE VPN</header>
+
+    <div class="main-container">
+        <div class="power-btn" onclick="openM('key-m')">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+                <path d="M12,12L12,2M19.07,4.93C20.89,6.75 22,9.25 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12C2,9.25 3.11,6.75 4.93,4.93"/>
+            </svg>
+        </div>
+        <div class="balance-display" id="user-bal">0 ⭐</div>
+        <div class="price-hint">1 день = 5 звезд</div>
+
+        <div class="line"></div>
+
+        <div class="grid">
+            <div class="btn" id="d-btn" onclick="pay('день')">День — 5 ⭐</div>
+            <div class="btn" id="m-btn" onclick="pay('месяц')">Месяц — 45 ⭐</div>
+            <div class="btn best-deal" id="y-btn" onclick="pay('год')">Год — 250 ⭐</div>
+            
+            <div class="btn" style="color: #ffd700;" onclick="openM('promo-m')">🎟️ Промокод</div>
+            <div class="btn" style="color: var(--orange-main);" onclick="openM('ref-m')">👤 Рефералы</div>
+            
+            <div class="btn full-btn" style="color: #ff4500; border-color: #ff4500;" onclick="openM('reward-m')">🎁 НАГРАДЫ</div>
+            
+            <div class="btn full-btn" style="color: #00d4ff; background: #252525;" onclick="tg.openLink('https://play.google.com/store/apps/details?id=com.happvpn.app')">📲 Скачать Happ VPN</div>
+            <div class="btn full-btn" style="color: #a2ff00;" onclick="openM('guide-m')">📖 Инструкция</div>
+        </div>
+    </div>
+
+    <div class="overlay" id="bg-overlay" onclick="closeM()"></div>
+
+    <div id="reward-m" class="modal">
+        <h3>🎁 Твои награды</h3>
+        <p class="rewards-text">Пользуйся нашим VPN и получай бесплатные дни</p>
+        <div class="rewards-row">
+            <div class="reward-box" id="r1"><b>+1</b> <span>дн.</span></div>
+            <div class="reward-box" id="r2"><b>+3</b> <span>дн.</span></div>
+            <div class="reward-box" id="r3"><b>+5</b> <span>дн.</span></div>
+            <div class="reward-box" id="r4"><b>+7</b> <span>дн.</span></div>
+            <div class="reward-box" id="r5"><b>+10</b> <span>дн.</span></div>
+        </div>
+        <p style="font-size: 13px; color: #888; margin-bottom: 20px;">Прогресс: <span id="days-val">0</span> / 15 дней</p>
+        <button class="action-submit" id="claim-btn" style="background: #333;" onclick="claim()">ЗАБРАТЬ</button>
+    </div>
+
+    <div id="ref-m" class="modal">
+        <h3>👤 Рефералы</h3>
+        <p style="color: var(--orange-main); font-weight: bold; font-size: 14px;">Приглашай друзей и получай бонусы!</p>
+        <div class="data-box" id="ref-link">https://t.me/TableVPN_bot?start=user</div>
+        <button class="action-submit" onclick="copy('ref-link')">КОПИРОВАТЬ ССЫЛКУ</button>
+    </div>
+
+    <div id="promo-m" class="modal">
+        <h3>Активация промокода</h3>
+        <input type="text" id="promo-f" class="promo-input" placeholder="ВВЕДИТЕ КОД">
+        <button class="action-submit" onclick="applyPromo()">АКТИВИРОВАТЬ</button>
+    </div>
+
+    <div id="key-m" class="modal">
+        <h3>Твой ключ</h3>
+        <div class="data-box" id="v-key">vless://загрузка...</div>
+        <button class="action-submit" onclick="copy('v-key')">КОПИРОВАТЬ</button>
+    </div>
+
+    <div id="guide-m" class="modal">
+        <h3>📖 Инструкция</h3>
+        <p style="text-align: left; font-size: 14px; line-height: 1.6;">
+            1. Нажми на <b>оранжевую кнопку</b> и скопируй ключ.<br>
+            2. Скачай <b>Happ VPN</b> (синяя кнопка).<br>
+            3. Вставь ключ в приложение и подключайся.<br>
+            4. Собирай ежедневные награды!
+        </p>
+        <button class="action-submit" onclick="closeM()">ПОНЯТНО</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let currentDiscount = 0;
+        let daysUsed = 0; 
+
+        function openM(id) {
+            if(id === 'ref-m') {
+                const uid = tg.initDataUnsafe.user?.id || "ID";
+                document.getElementById('ref-link').innerText = `https://t.me/TableVPN_bot?start=${uid}`;
+            }
+            if(id === 'reward-m') renderRewards();
+            document.getElementById(id).style.display = 'block';
+            document.getElementById('bg-overlay').style.display = 'block';
+        }
+
+        function closeM() {
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+            document.getElementById('bg-overlay').style.display = 'none';
+        }
+
+        function renderRewards() {
+            document.getElementById('days-val').innerText = daysUsed;
+            const steps = [3, 6, 9, 12, 15];
+            steps.forEach((s, i) => {
+                if(daysUsed >= s) document.getElementById('r'+(i+1)).classList.add('active');
+            });
+            if(daysUsed >= 3) {
+                const b = document.getElementById('claim-btn');
+                b.style.background = 'var(--orange-main)';
+                b.innerText = "ЗАБРАТЬ НАГРАДУ";
+            }
+        }
+
+        function claim() {
+            if(daysUsed < 3) tg.showAlert("Нужно минимум 3 дня!");
+            else { tg.sendData(JSON.stringify({action: "claim_reward", progress: daysUsed})); tg.close(); }
+        }
+
+        function applyPromo() {
+            const val = document.getElementById('promo-f').value.trim();
+            if (val === 'T#8vL!x_9$QzP2026_ADM') {
+                currentDiscount = 1;
+                document.getElementById('d-btn').innerText = "День — 0 ⭐";
+                document.getElementById('m-btn').innerText = "Месяц — 0 ⭐";
+                document.getElementById('y-btn').innerText = "Год — 0 ⭐";
+                tg.showAlert("АДМИН-ДОСТУП ВКЛЮЧЕН");
+            } else if (val.toUpperCase() === 'TABLE') {
+                currentDiscount = 0.2; tg.showAlert("Скидка 20%!");
+            } else { tg.showAlert("Неверный код"); return; }
+            closeM();
+        }
+
+        function pay(t) {
+            let p = t === 'день' ? 5 : t === 'месяц' ? 45 : 250;
+            if (currentDiscount > 0) p = Math.floor(p * (1 - currentDiscount));
+            tg.sendData(JSON.stringify({action: "buy", type: t, price: p}));
+        }
+
+        function copy(id) {
+            navigator.clipboard.writeText(document.getElementById(id).innerText);
+            tg.showAlert("Скопировано!");
+        }
+    </script>
+</body>
+</html>
